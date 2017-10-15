@@ -1,0 +1,15 @@
+﻿<Window x:Class="Gun_Eleme.OauthWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Gun_Eleme"
+        mc:Ignorable="d"
+        Title="OAuth Token" Height="277" Width="501" ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid>
+        <Label Content="请在PC微信中打开任意饿了么红包，如果没有红包请使用下面的链接：" Margin="30,32,30,0" VerticalAlignment="Top" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+        <TextBox x:Name="url_TextBox" Margin="30,85,30,91" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True" Text="https://h5.ele.me/hongbao/#hardware_id=&amp;is_lucky_group=True&amp;lucky_number=9&amp;track_id=&amp;platform=4&amp;sn=10d37dc26c1184e1&amp;theme_id=1449&amp;device_id="/>
+        <Button Content="复制到剪贴板" Margin="191,0,192,27" Height="35" VerticalAlignment="Bottom" Click="Button_Click"/>
+
+    </Grid>
+</Window>
