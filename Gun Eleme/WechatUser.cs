@@ -144,6 +144,17 @@ namespace Gun_Eleme {
                                                 eleme.LuckyNum = int.Parse(match1.Groups[1].Value);
                                             }
                                             onReceived(eleme);
+                                        }else if(!string.IsNullOrEmpty(msg["Content"])) {
+                                            MatchCollection matchCollection = Regex.Matches(msg["Content"], "https://h5\\.ele\\.me/hongbao/#hardware_id=&amp;is_lucky_group=True&amp;lucky_number=(\\d+)&amp;track_id=&amp;platform=\\d+&amp;sn=([^&]+)&amp;theme_id=\\d+&amp;device_id=");
+                                            foreach (Match m in matchCollection) {
+                                                if (m.Success && m.Groups.Count > 2) {
+                                                    ElemeLuckyMoney eleme = new ElemeLuckyMoney();
+                                                    eleme.Url = m.Groups[0].Value;
+                                                    eleme.LuckyNum = int.Parse(m.Groups[1].Value); 
+                                                    eleme.Sn = m.Groups[2].Value;
+                                                    onReceived(eleme);
+                                                }
+                                            }
                                         }
                                     }
                                     Thread.Sleep(1000);
@@ -155,7 +166,7 @@ namespace Gun_Eleme {
                     }else {
                         onExpired();
                     }
-                }).OnFail((sd)=> { Console.WriteLine(sd.Message); }).Go();
+                }).Go();
         }
 
 

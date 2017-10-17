@@ -20,16 +20,19 @@ namespace Gun_Eleme {
     /// </summary>
     public partial class MainWindow : Window {
 
-        private WechatUser _unluckyUser;
-        private WechatUser unluckyUser
+        private WechatUser _checkUser;
+        private WechatUser checkUser
         {
             get
             {
-                if (_unluckyUser == null)
-                    _unluckyUser = new WechatUser();
-                return _unluckyUser;
+                if (_checkUser == null)
+                    _checkUser = new WechatUser();
+                return _checkUser;
             }
         }
+
+        private OauthToken unluckyUser;
+        private OauthToken luckyUser;
 
         private Queue<ElemeLuckyMoney> _elemeQueue;
         private Queue<ElemeLuckyMoney> elemeQueue
@@ -39,6 +42,16 @@ namespace Gun_Eleme {
                 if (_elemeQueue == null)
                     _elemeQueue = new Queue<ElemeLuckyMoney>();
                 return _elemeQueue;
+            }
+        }
+
+        private List<ElemeLuckyMoney> _elemeHistoryList;
+        private List<ElemeLuckyMoney> elemeHistoryList {
+            get
+            {
+                if (_elemeHistoryList == null)
+                    _elemeHistoryList = new List<ElemeLuckyMoney>();
+                return _elemeHistoryList;
             }
         }
 
@@ -88,49 +101,35 @@ namespace Gun_Eleme {
                 });
             }
         }
-
-        private int _gottenMoneyAmount;
-        private int gottenMoneyAmount
-        {
-            get
-            {
-                return _gottenMoneyAmount;
-            }
-            set
-            {
-                Dispatcher.Invoke(() => {
-                    _gottenMoneyAmount = value;
-                    gottenMoneyAmount_Label.Content = value;
-                });
-            }
-        }
-
+        
         private Thread _runThread;
         private Thread runThread {
             get
             {
                 if(_runThread == null) {
                     _runThread = new Thread(() => {
-                        OauthToken luckyToken = OauthToken.Load("lucky");
-                        OauthToken unluckyToken = OauthToken.Load("unlucky");
-
-                        while(_runThread != null) {
+                        while(_runThread != null && luckyUser != null && unluckyUser != null) {
                             if (elemeQueue.Count > 0) {
                                 ElemeLuckyMoney eleme = elemeQueue.Dequeue();
-                                unluckyToken.Go(eleme, (res) => {
+                                unluckyUser.Go(eleme, (res) => {
                                     Console.WriteLine(res + ":" + eleme.Url);
-                                    if(res == 1) {
-                                        luckyToken.Go(eleme, (res1) => {
+                                    eleme.Rest = res;
+                                    if (res == 1) {
+                                        luckyUser.Go(eleme, (res1) => {
+                                            eleme.Rest = res1;
                                             if (res1 == 0) {
                                                 gottenMoneyCount++;
-                                                gottenMoneyAmount += eleme.LuckyNum;
+                                                eleme.IsSuccess = true;
                                             }
                                             listeningMoneyCount--;
+                                            Dispatcher.Invoke(() => {
+                                                status_DataGrid.Items.Refresh();
+                                            });
                                         }, () => {
                                             Dispatcher.Invoke(() => {
-                                                luckyOauthStatus_Label.Content = "Token失效";
                                                 elemeQueue.Enqueue(eleme);
                                                 Stop();
+                                                MessageBox.Show(this, "拿刀用户的OAuth Token失效！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                                             });
                                         });
                                     }else if(res > 1) {
@@ -139,11 +138,14 @@ namespace Gun_Eleme {
                                     }else {
                                         listeningMoneyCount--;
                                     }
+                                    Dispatcher.Invoke(() => {
+                                        status_DataGrid.Items.Refresh();
+                                    });
                                 }, () => {
                                     Dispatcher.Invoke(() => {
-                                        unluckyUserStatus_Label.Content = ((string)unluckyUserStatus_Label.Content).Split('；')[0] + "；Token失效";
                                         elemeQueue.Enqueue(eleme);
                                         Stop();
+                                        MessageBox.Show(this, "垫刀用户的OAuth Token失效！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                                     });
                                 });
                             }else {
@@ -179,17 +181,17 @@ namespace Gun_Eleme {
 
         private void Start() {
             control_Button.Content = "停止";
-            unluckyWechatLogin_Button.IsEnabled = false;
-            unluckyWechatOauth_Button.IsEnabled = false;
-            luckyWechatOauth_Button.IsEnabled = false;
+            wechatLogin_Button.IsEnabled = false;
+            luckyUser_Button.IsEnabled = false;
+            unluckyUser_Button.IsEnabled = false;
             runThread.Start();
         }
 
         private void Stop() {
             control_Button.Content = "开始";
-            unluckyWechatLogin_Button.IsEnabled = true;
-            unluckyWechatOauth_Button.IsEnabled = true;
-            luckyWechatOauth_Button.IsEnabled = true;
+            wechatLogin_Button.IsEnabled = true;
+            luckyUser_Button.IsEnabled = true;
+            unluckyUser_Button.IsEnabled = true;
             runThread = null;
         }
 
@@ -205,57 +207,34 @@ namespace Gun_Eleme {
             }
             FiddlerApplication.SetAppDisplayName("Gun Eleme");
 
-            OauthToken token = OauthToken.Load("lucky");
-            if(token != null) {
-                luckyUserName_Label.Content = token.UserName;
-                luckyOauthStatus_Label.Content = "已获取Token";
-            }
-            token = OauthToken.Load("unlucky");
-            if (token != null) {
-                unluckyUserName_Label.Content = token.UserName;
-                unluckyUserStatus_Label.Content = ((string)unluckyUserStatus_Label.Content).Split('；')[0] + "；已获取Token";
-            }
+            status_DataGrid.ItemsSource = elemeHistoryList;
         }
 
-        private void unluckyWechatLogin_Button_Click(object sender, RoutedEventArgs e) {
-            WechatWindow window = new WechatWindow(this, unluckyUser);
+        private void wechatLogin_Button_Click(object sender, RoutedEventArgs e) {
+            WechatWindow window = new WechatWindow(this, checkUser);
             if(window.ShowDialog() == true) {
-                unluckyUserName_Label.Content = window.LoginToken.UserName;
-                unluckyUserStatus_Label.Content = "已登录；" + ((string)unluckyUserStatus_Label.Content).Split('；')[1];
-                unluckyUser.Sync(window.LoginToken, (eleme) => {
+                checkUserName_Label.Content = window.LoginToken.UserName;
+                checkUserStatus_Label.Content = "已登录";
+                checkUser.Sync(window.LoginToken, (eleme) => {
                     if (!elemeQueue.Contains(eleme)) {
                         elemeQueue.Enqueue(eleme);
                         listeningMoneyCount++;
+                        elemeHistoryList.Insert(0, eleme);
+                        Dispatcher.Invoke(() => {
+                            status_DataGrid.Items.Refresh();
+                        });
                     }
                 }, () => {
                     Dispatcher.Invoke(() => {
-                        unluckyUserStatus_Label.Content = "登录失效；" + ((string)unluckyUserStatus_Label.Content).Split('；')[1];
-                        Stop();
+                        checkUserStatus_Label.Content = "登录失效";
                     });
                 });
             }
         }
-
-        private void unluckyWechatOauth_Button_Click(object sender, RoutedEventArgs e) {
-            OauthWindow window = new OauthWindow(this);
-            if (window.ShowDialog() == true) {
-                unluckyUserStatus_Label.Content = ((string)unluckyUserStatus_Label.Content).Split('；')[0] + "；已获取Token";
-                window.oauthToken.Save("unlucky");
-            }
-        }
-
-        private void luckyWechatOauth_Button_Click(object sender, RoutedEventArgs e) {
-            OauthWindow window = new OauthWindow(this);
-            if (window.ShowDialog() == true) {
-                luckyUserName_Label.Content = window.oauthToken.UserName;
-                luckyOauthStatus_Label.Content = "已获取Token";
-                window.oauthToken.Save("lucky");
-            }
-        }
-
+        
         private void control_Button_Click(object sender, RoutedEventArgs e) {
             if ((string)control_Button.Content == "开始") {
-                if((string)luckyOauthStatus_Label.Content == "已获取Token" && (string)unluckyUserStatus_Label.Content == "已登录；已获取Token") {
+                if ((string)checkUserStatus_Label.Content == "已登录" && luckyUser != null && unluckyUser != null) {
                     Start();
                 } else {
                     MessageBox.Show(this, "请先完成登录和Token的获取（建议先获取Token）！", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -267,6 +246,22 @@ namespace Gun_Eleme {
 
         private void Window_Closed(object sender, EventArgs e) {
             Environment.Exit(0);
+        }
+
+        private void unluckyUser_Button_Click(object sender, RoutedEventArgs e) {
+            ChooseUserWindow window = new ChooseUserWindow(this);
+            if(window.ShowDialog() == true) {
+                unluckyUser = window.Token;
+                unluckyUserName_Label.Content = unluckyUser.UserName;
+            }
+        }
+
+        private void luckyUser_Button_Click(object sender, RoutedEventArgs e) {
+            ChooseUserWindow window = new ChooseUserWindow(this);
+            if (window.ShowDialog() == true) {
+                luckyUser = window.Token;
+                luckyUserName_Label.Content = luckyUser.UserName;
+            }
         }
     }
 }

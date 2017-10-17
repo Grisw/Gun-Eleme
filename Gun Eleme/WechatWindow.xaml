@@ -8,7 +8,7 @@
         Title="微信登录" Height="350.138" Width="350" ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" Loaded="Window_Loaded">
     <Grid>
         <Image x:Name="qrcode_Image" Height="200" Margin="72,75,72,0" Width="200" VerticalAlignment="Top"/>
-        <Label Content="垫刀用户" Margin="143,30,143,0" VerticalAlignment="Top"/>
+        <Label Content="垫刀用户" Margin="100,30,100,0" VerticalAlignment="Top" HorizontalContentAlignment="Center"/>
 
     </Grid>
 </Window>
