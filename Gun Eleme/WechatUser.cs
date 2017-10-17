@@ -34,6 +34,8 @@ namespace Gun_Eleme {
             }
         }
 
+        private string passTicket;
+
         public void GetQrcode(Action<bool, string> onCompleted) {
             Http.Get("https://login.wx2.qq.com/jslogin?appid=wx782c26e4c19acffb&redirect_uri=https%3A%2F%2Fwx2.qq.com%2Fcgi-bin%2Fmmwebwx-bin%2Fwebwxnewloginpage&fun=new&lang=zh_CN")
                 .OnSuccess((result) => {
@@ -90,6 +92,7 @@ namespace Gun_Eleme {
                                                 dynamic ret = jsSerializer.Deserialize<dynamic>(result_2);
                                                 token.SyncKey = ret["SyncKey"];
                                                 token.UserName = ret["User"]["NickName"];
+                                                passTicket = token.PassTicket;
                                                 onCompleted(true, token);
                                             }).Go();
                                     }
@@ -105,6 +108,8 @@ namespace Gun_Eleme {
         }
 
         public void Sync(LoginToken loginToken, Action<ElemeLuckyMoney> onReceived, Action onExpired) {
+            if (passTicket != loginToken.PassTicket)
+                return;
             string synccheck = "https://webpush.wx2.qq.com/cgi-bin/mmwebwx-bin/synccheck?r=" + Eval.JScriptEvaluate("~new Date();", vsaEngine).ToString() + "&skey=" + loginToken.Skey + "&sid=" + loginToken.Sid + "&uin=" + loginToken.Uin + "&deviceid=" + loginToken.DeviceID + "&synckey=" + loginToken.SyncKey;
             Http.Get(synccheck)
                 .OnSuccess((result) => {
