@@ -1,6 +1,7 @@
 ﻿using Fiddler;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -45,15 +46,17 @@ namespace Gun_Eleme {
             }
         }
 
-        private List<ElemeLuckyMoney> _elemeHistoryList;
-        private List<ElemeLuckyMoney> elemeHistoryList {
+        private ObservableCollection<ElemeLuckyMoney> _elemeHistoryList;
+        private ObservableCollection<ElemeLuckyMoney> elemeHistoryList
+        {
             get
             {
                 if (_elemeHistoryList == null)
-                    _elemeHistoryList = new List<ElemeLuckyMoney>();
+                    _elemeHistoryList = new ObservableCollection<ElemeLuckyMoney>();
                 return _elemeHistoryList;
             }
         }
+
 
         private int _tryCount;
         private int tryCount {
@@ -108,11 +111,13 @@ namespace Gun_Eleme {
             {
                 if(_runThread == null) {
                     _runThread = new Thread(() => {
-                        while(_runThread != null && luckyUser != null && unluckyUser != null) {
+                        while(_runThread != null) {
                             if (elemeQueue.Count > 0) {
-                                ElemeLuckyMoney eleme = elemeQueue.Dequeue();
+                                ElemeLuckyMoney eleme;
+                                lock (elemeQueue) {
+                                    eleme = elemeQueue.Dequeue();
+                                }
                                 unluckyUser.Go(eleme, (res) => {
-                                    Console.WriteLine(res + ":" + eleme.Url);
                                     eleme.Rest = res;
                                     if (res == 1) {
                                         luckyUser.Go(eleme, (res1) => {
@@ -122,9 +127,6 @@ namespace Gun_Eleme {
                                                 eleme.IsSuccess = true;
                                             }
                                             listeningMoneyCount--;
-                                            Dispatcher.Invoke(() => {
-                                                status_DataGrid.Items.Refresh();
-                                            });
                                         }, () => {
                                             Dispatcher.Invoke(() => {
                                                 elemeQueue.Enqueue(eleme);
@@ -133,14 +135,13 @@ namespace Gun_Eleme {
                                             });
                                         });
                                     }else if(res > 1) {
-                                        elemeQueue.Enqueue(eleme);
+                                        lock (elemeQueue) {
+                                            elemeQueue.Enqueue(eleme);
+                                        }
                                         tryCount++;
                                     }else {
                                         listeningMoneyCount--;
                                     }
-                                    Dispatcher.Invoke(() => {
-                                        status_DataGrid.Items.Refresh();
-                                    });
                                 }, () => {
                                     Dispatcher.Invoke(() => {
                                         elemeQueue.Enqueue(eleme);
@@ -216,12 +217,13 @@ namespace Gun_Eleme {
                 checkUserName_Label.Content = window.LoginToken.UserName;
                 checkUserStatus_Label.Content = "已登录";
                 checkUser.Sync(window.LoginToken, (eleme) => {
-                    if (!elemeQueue.Contains(eleme)) {
-                        elemeQueue.Enqueue(eleme);
+                    if (!elemeHistoryList.Contains(eleme)) {
+                        lock (elemeQueue) {
+                            elemeQueue.Enqueue(eleme);
+                        }
                         listeningMoneyCount++;
-                        elemeHistoryList.Insert(0, eleme);
                         Dispatcher.Invoke(() => {
-                            status_DataGrid.Items.Refresh();
+                            elemeHistoryList.Insert(0, eleme);
                         });
                     }
                 }, () => {

@@ -28,28 +28,19 @@
                 <Button x:Name="luckyUser_Button" Content="选择用户" Margin="40,48,40,0" Height="30" VerticalAlignment="Top" Click="luckyUser_Button_Click"/>
             </Grid>
         </GroupBox>
-        <GroupBox Header="状态" Margin="24,336,24,24" Grid.ColumnSpan="2">
+        <GroupBox Header="状态" Margin="24,336,12,24">
             <Grid Margin="0">
                 <Label Content="总尝试次数：" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
                 <Label Content="监听红包数：" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top"/>
                 <Label Content="抢到红包数：" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top"/>
-                <Label x:Name="tryCount_Label" Content="0" Margin="97,10,325,0" VerticalAlignment="Top"/>
-                <Label x:Name="listeningMoneyCount_Label" Content="0" Margin="97,40,325,0" VerticalAlignment="Top"/>
-                <Label x:Name="gottenMoneyCount_Label" Content="0" Margin="97,70,325,0" VerticalAlignment="Top"/>
-                <DataGrid x:Name="status_DataGrid" HorizontalAlignment="Left" Margin="214,10,0,0" VerticalAlignment="Top" Height="85" Width="310" IsReadOnly="True" AutoGenerateColumns="False">
-                    <DataGrid.Columns>
-                        <DataGridCheckBoxColumn Binding="{Binding IsSuccess}" ClipboardContentBinding="{x:Null}" Header="已抢到" IsReadOnly="True"/>
-                        <DataGridTextColumn Binding="{Binding Rest}" ClipboardContentBinding="{x:Null}" Header="剩余人数" IsReadOnly="True"/>
-                        <DataGridTextColumn Binding="{Binding LuckyNum}" ClipboardContentBinding="{x:Null}" Header="幸运数字" IsReadOnly="True"/>
-                        <DataGridTextColumn Binding="{Binding Amount}" ClipboardContentBinding="{x:Null}" Header="金额" IsReadOnly="True"/>
-                        <DataGridHyperlinkColumn Binding="{Binding Url}" ContentBinding="{x:Null}" ClipboardContentBinding="{x:Null}" Header="URL" IsReadOnly="True"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <Label x:Name="tryCount_Label" Content="0" Margin="97,10,10,0" VerticalAlignment="Top"/>
+                <Label x:Name="listeningMoneyCount_Label" Content="0" Margin="97,40,10,0" VerticalAlignment="Top"/>
+                <Label x:Name="gottenMoneyCount_Label" Content="0" Margin="97,70,10,0" VerticalAlignment="Top"/>
             </Grid>
         </GroupBox>
-        <GroupBox Header="控制" Margin="12,157,24,0" Grid.Column="1" Height="160" VerticalAlignment="Top">
+        <GroupBox Header="控制" Margin="12,157,24,0" Grid.Column="1" Height="114" VerticalAlignment="Top">
             <Grid Margin="0">
-                <Button x:Name="control_Button" Content="开始" Margin="40,92,40,0" VerticalAlignment="Top" Height="30" Click="control_Button_Click"/>
+                <Button x:Name="control_Button" Content="开始" Margin="40,49,40,0" VerticalAlignment="Top" Height="30" Click="control_Button_Click"/>
                 <Label Content="红包数量：" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
                 <TextBox x:Name="moneyCount_TextBox" Height="25" Margin="85,10,10,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" VerticalContentAlignment="Center"/>
             </Grid>
@@ -63,6 +54,15 @@
                 <Label x:Name="checkUserStatus_Label" Content="未登录" Margin="73,49,10,0" VerticalAlignment="Top"/>
             </Grid>
         </GroupBox>
+        <DataGrid x:Name="status_DataGrid" HorizontalAlignment="Left" Margin="12,292,0,0" VerticalAlignment="Top" Height="173" Width="261" IsReadOnly="True" AutoGenerateColumns="False" Grid.Column="1">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Binding="{Binding IsSuccess}" ClipboardContentBinding="{x:Null}" Header="已抢到" IsReadOnly="True"/>
+                <DataGridTextColumn Binding="{Binding Rest}" ClipboardContentBinding="{x:Null}" Header="剩余人数" IsReadOnly="True"/>
+                <DataGridTextColumn Binding="{Binding LuckyNum}" ClipboardContentBinding="{x:Null}" Header="幸运数字" IsReadOnly="True"/>
+                <DataGridTextColumn Binding="{Binding Amount}" ClipboardContentBinding="{x:Null}" Header="金额" IsReadOnly="True"/>
+                <DataGridHyperlinkColumn Binding="{Binding Url}" ContentBinding="{x:Null}" ClipboardContentBinding="{x:Null}" Header="URL" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
 
     </Grid>
 </Window>

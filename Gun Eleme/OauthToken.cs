@@ -144,15 +144,15 @@ namespace Gun_Eleme {
                 .Body("json", body)
                 .Headers(new Header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36 MicroMessenger/6.5.2.501 NetType/WIFI WindowsWechat QBCore/3.43.691.400 QQBrowser/9.0.2524.400"))
                 .OnSuccess((result) => {
-                  //  try {
+                    try {
                         dynamic ret = jsSerializer.Deserialize<dynamic>(result);
                         if(ret["promotion_items"].Length > 0) {
                             eleme.Amount = ret["promotion_items"][0]["amount"];
                         }
                         onResult(eleme.LuckyNum - ret["promotion_records"].Length);
-                   // } catch {
-                      //  onExpired();
-                    //}
+                    } catch {
+                        onExpired();
+                    }
                 }).OnFail((resp)=> {
                     Thread.Sleep(500);
                     request.Go();
