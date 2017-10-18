@@ -54,7 +54,7 @@
                 <Label x:Name="checkUserStatus_Label" Content="未登录" Margin="73,49,10,0" VerticalAlignment="Top"/>
             </Grid>
         </GroupBox>
-        <DataGrid x:Name="status_DataGrid" Margin="12,292,24,38" IsReadOnly="True" AutoGenerateColumns="False" Grid.Column="1">
+        <DataGrid x:Name="status_DataGrid" Margin="12,292,0,38" IsReadOnly="True" AutoGenerateColumns="False" Grid.Column="1" HorizontalAlignment="Left" Width="261">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Binding="{Binding IsSuccess}" ClipboardContentBinding="{x:Null}" Header="已抢到" IsReadOnly="True"/>
                 <DataGridTextColumn Binding="{Binding Rest}" ClipboardContentBinding="{x:Null}" Header="剩余人数" IsReadOnly="True"/>
