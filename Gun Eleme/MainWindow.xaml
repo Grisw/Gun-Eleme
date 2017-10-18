@@ -21,7 +21,7 @@
                 <Button x:Name="unluckyUser_Button" Content="选择用户" Margin="40,48,40,0" Height="30" VerticalAlignment="Top" Click="unluckyUser_Button_Click"/>
             </Grid>
         </GroupBox>
-        <GroupBox Header="拿刀用户" Margin="12,24,24,0" Grid.Column="1" Height="113" VerticalAlignment="Top">
+        <GroupBox Header="主刀用户" Margin="12,24,24,0" Grid.Column="1" Height="113" VerticalAlignment="Top">
             <Grid Margin="0">
                 <Label Content="用户名：" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
                 <Label x:Name="luckyUserName_Label" Content="" Margin="73,10,10,0" VerticalAlignment="Top"/>
@@ -54,7 +54,7 @@
                 <Label x:Name="checkUserStatus_Label" Content="未登录" Margin="73,49,10,0" VerticalAlignment="Top"/>
             </Grid>
         </GroupBox>
-        <DataGrid x:Name="status_DataGrid" HorizontalAlignment="Left" Margin="12,292,0,0" VerticalAlignment="Top" Height="173" Width="261" IsReadOnly="True" AutoGenerateColumns="False" Grid.Column="1">
+        <DataGrid x:Name="status_DataGrid" Margin="12,292,24,38" IsReadOnly="True" AutoGenerateColumns="False" Grid.Column="1">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Binding="{Binding IsSuccess}" ClipboardContentBinding="{x:Null}" Header="已抢到" IsReadOnly="True"/>
                 <DataGridTextColumn Binding="{Binding Rest}" ClipboardContentBinding="{x:Null}" Header="剩余人数" IsReadOnly="True"/>
@@ -63,6 +63,7 @@
                 <DataGridHyperlinkColumn Binding="{Binding Url}" ContentBinding="{x:Null}" ClipboardContentBinding="{x:Null}" Header="URL" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
+        <Label Content="v0.2.3" Margin="235,0,24,10" VerticalAlignment="Bottom" FontSize="10" Foreground="Gray" Grid.Column="1"/>
 
     </Grid>
 </Window>

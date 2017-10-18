@@ -182,17 +182,11 @@ namespace Gun_Eleme {
 
         private void Start() {
             control_Button.Content = "停止";
-            wechatLogin_Button.IsEnabled = false;
-            luckyUser_Button.IsEnabled = false;
-            unluckyUser_Button.IsEnabled = false;
             runThread.Start();
         }
 
         private void Stop() {
             control_Button.Content = "开始";
-            wechatLogin_Button.IsEnabled = true;
-            luckyUser_Button.IsEnabled = true;
-            unluckyUser_Button.IsEnabled = true;
             runThread = null;
         }
 
@@ -236,10 +230,10 @@ namespace Gun_Eleme {
         
         private void control_Button_Click(object sender, RoutedEventArgs e) {
             if ((string)control_Button.Content == "开始") {
-                if ((string)checkUserStatus_Label.Content == "已登录" && luckyUser != null && unluckyUser != null) {
+                if (luckyUser != null && unluckyUser != null) {
                     Start();
                 } else {
-                    MessageBox.Show(this, "请先完成登录和Token的获取（建议先获取Token）！", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(this, "请选择垫刀和主刀用户的OAuth Token！", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }else {
                 Stop();

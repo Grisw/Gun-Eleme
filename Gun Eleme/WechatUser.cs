@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Web;
 using System.Web.Script.Serialization;
 using System.Windows.Threading;
 
@@ -110,12 +111,19 @@ namespace Gun_Eleme {
         public void Sync(LoginToken loginToken, Action<ElemeLuckyMoney> onReceived, Action onExpired) {
             if (passTicket != loginToken.PassTicket)
                 return;
-            string synccheck = "https://webpush.wx2.qq.com/cgi-bin/mmwebwx-bin/synccheck?r=" + Eval.JScriptEvaluate("~new Date();", vsaEngine).ToString() + "&skey=" + loginToken.Skey + "&sid=" + loginToken.Sid + "&uin=" + loginToken.Uin + "&deviceid=" + loginToken.DeviceID + "&synckey=" + loginToken.SyncKey;
+            StringBuilder synckey = new StringBuilder();
+            foreach(dynamic o in loginToken.SyncKey["List"]) {
+                synckey.Append(o["Key"] + "_" + o["Val"] + "|");
+            }
+            if (synckey.Length > 0)
+                synckey.Remove(synckey.Length - 1, 1);
+            string synccheck = "https://webpush.wx2.qq.com/cgi-bin/mmwebwx-bin/synccheck?r=" + Eval.JScriptEvaluate("~new Date();", vsaEngine).ToString() + "&skey=" + HttpUtility.UrlEncode(loginToken.Skey) + "&sid=" + HttpUtility.UrlEncode(loginToken.Sid) + "&uin=" + loginToken.Uin + "&deviceid=" + loginToken.DeviceID + "&synckey=" + HttpUtility.UrlEncode(synckey.ToString());
             Http.Get(synccheck)
                 .OnSuccess((result) => {
                     Match match = Regex.Match(result, "retcode:\"(\\d+)\"");
-                    if(match.Success && match.Groups.Count > 1) {
-                        if(match.Groups[1].Value == "0") {
+                    if(match.Success && match.Groups.Count > 1 && match.Groups[1].Value == "0") {
+                        match = Regex.Match(result, "selector:\"(\\d+)\"");
+                        if (match.Success && match.Groups.Count > 1 && match.Groups[1].Value != "0") {
                             Http.Post("https://wx2.qq.com/cgi-bin/mmwebwx-bin/webwxsync?sid=" + loginToken.Sid + "&skey=" + loginToken.Skey + "&lang=zh_CN&pass_ticket=" + loginToken.PassTicket)
                                 .Body("json", jsSerializer.Serialize(
                                         new {
@@ -149,26 +157,23 @@ namespace Gun_Eleme {
                                                 eleme.LuckyNum = int.Parse(match1.Groups[1].Value);
                                             }
                                             onReceived(eleme);
-                                        }else if(!string.IsNullOrEmpty(msg["Content"])) {
+                                        } else if (!string.IsNullOrEmpty(msg["Content"])) {
                                             MatchCollection matchCollection = Regex.Matches(msg["Content"], "https://h5\\.ele\\.me/hongbao/#hardware_id=&amp;is_lucky_group=True&amp;lucky_number=(\\d+)&amp;track_id=&amp;platform=\\d+&amp;sn=([^&]+)&amp;theme_id=\\d+&amp;device_id=");
                                             foreach (Match m in matchCollection) {
                                                 if (m.Success && m.Groups.Count > 2) {
                                                     ElemeLuckyMoney eleme = new ElemeLuckyMoney();
                                                     eleme.Url = m.Groups[0].Value;
-                                                    eleme.LuckyNum = int.Parse(m.Groups[1].Value); 
+                                                    eleme.LuckyNum = int.Parse(m.Groups[1].Value);
                                                     eleme.Sn = m.Groups[2].Value;
                                                     onReceived(eleme);
                                                 }
                                             }
                                         }
                                     }
-                                    Thread.Sleep(1000);
-                                    Sync(loginToken, onReceived, onExpired);
                                 }).Go();
-                        } else {
-                            onExpired();
                         }
-                    }else {
+                        Sync(loginToken, onReceived, onExpired);
+                    } else {
                         onExpired();
                     }
                 }).Go();
