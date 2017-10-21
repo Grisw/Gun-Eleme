@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -137,25 +138,27 @@ namespace Gun_Eleme {
         }
 
         public void Go(ElemeLuckyMoney eleme, Action<int> onResult, Action onExpired) {
+            int tryCount = 0;
             RequestBody["group_sn"] = eleme.Sn;
             string body = jsSerializer.Serialize(RequestBody);
             RequestBuilder request = null;
             request = Http.Post(Url)
                 .Body("json", body)
-                .Headers(new Header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36 MicroMessenger/6.5.2.501 NetType/WIFI WindowsWechat QBCore/3.43.691.400 QQBrowser/9.0.2524.400"))
                 .OnSuccess((result) => {
                     try {
                         dynamic ret = jsSerializer.Deserialize<dynamic>(result);
-                        if(ret["promotion_items"].Length > 0) {
+                        if (ret["promotion_items"].Length > 0) {
                             eleme.Amount = ret["promotion_items"][0]["amount"];
                         }
                         onResult(eleme.LuckyNum - ret["promotion_records"].Length);
                     } catch {
                         onExpired();
                     }
-                }).OnFail((resp)=> {
-                    Thread.Sleep(500);
-                    request.Go();
+                }).OnFail((resp) => {
+                    if(tryCount++ <= 5) {
+                        Thread.Sleep(4000);
+                        request.Go();
+                    }
                 });
             request.Go();
         }

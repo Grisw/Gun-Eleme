@@ -34,18 +34,7 @@ namespace Gun_Eleme {
 
         private OauthToken unluckyUser;
         private OauthToken luckyUser;
-
-        private Queue<ElemeLuckyMoney> _elemeQueue;
-        private Queue<ElemeLuckyMoney> elemeQueue
-        {
-            get
-            {
-                if (_elemeQueue == null)
-                    _elemeQueue = new Queue<ElemeLuckyMoney>();
-                return _elemeQueue;
-            }
-        }
-
+        
         private ObservableCollection<ElemeLuckyMoney> _elemeHistoryList;
         private ObservableCollection<ElemeLuckyMoney> elemeHistoryList
         {
@@ -56,8 +45,7 @@ namespace Gun_Eleme {
                 return _elemeHistoryList;
             }
         }
-
-
+        
         private int _tryCount;
         private int tryCount {
             get
@@ -104,62 +92,58 @@ namespace Gun_Eleme {
                 });
             }
         }
+
+        private bool isRunning { get; set; }
         
-        private Thread _runThread;
-        private Thread runThread {
+        private Thread runningThread
+        {
             get
             {
-                if(_runThread == null) {
-                    _runThread = new Thread(() => {
-                        while(_runThread != null) {
-                            if (elemeQueue.Count > 0) {
-                                ElemeLuckyMoney eleme;
-                                lock (elemeQueue) {
-                                    eleme = elemeQueue.Dequeue();
-                                }
-                                unluckyUser.Go(eleme, (res) => {
-                                    eleme.Rest = res;
-                                    if (res == 1) {
-                                        luckyUser.Go(eleme, (res1) => {
-                                            eleme.Rest = res1;
-                                            if (res1 == 0) {
-                                                gottenMoneyCount++;
-                                                eleme.IsSuccess = true;
-                                            }
-                                            listeningMoneyCount--;
-                                        }, () => {
-                                            Dispatcher.Invoke(() => {
-                                                elemeQueue.Enqueue(eleme);
-                                                Stop();
-                                                MessageBox.Show(this, "拿刀用户的OAuth Token失效！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                                            });
-                                        });
-                                    }else if(res > 1) {
-                                        lock (elemeQueue) {
-                                            elemeQueue.Enqueue(eleme);
-                                        }
-                                        tryCount++;
-                                    }else {
-                                        listeningMoneyCount--;
+                return new Thread((e) => {
+                    ElemeLuckyMoney eleme = e as ElemeLuckyMoney;
+                    while (isRunning) {
+                        bool? state = null;
+                        unluckyUser.Go(eleme, (res) => {
+                            tryCount++;
+                            eleme.Rest = res;
+                            if (res == 1) {
+                                luckyUser.Go(eleme, (res1) => {
+                                    eleme.Rest = res1;
+                                    if (res1 == 0) {
+                                        gottenMoneyCount++;
+                                        eleme.IsSuccess = true;
                                     }
+                                    state = false;
                                 }, () => {
                                     Dispatcher.Invoke(() => {
-                                        elemeQueue.Enqueue(eleme);
+                                        state = false;
                                         Stop();
-                                        MessageBox.Show(this, "垫刀用户的OAuth Token失效！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        MessageBox.Show(this, "拿刀用户的OAuth Token失效！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                                     });
                                 });
-                            }else {
-                                Thread.Sleep(100);
+                            } else if (res > 1) {
+                                state = true;
+                            } else {
+                                state = false;
                             }
+                        }, () => {
+                            Dispatcher.Invoke(() => {
+                                state = false;
+                                Stop();
+                                MessageBox.Show(this, "垫刀用户的OAuth Token失效！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                            });
+                        });
+                        while (state == null) {
+                            Thread.Sleep(100);
                         }
-                    });
-                }
-                return _runThread;
-            }
-            set
-            {
-                _runThread = value;
+                        if (state == true) {
+                            Thread.Sleep(3000);
+                        } else {
+                            listeningMoneyCount--;
+                            break;
+                        }
+                    }
+                });
             }
         }
 
@@ -182,17 +166,27 @@ namespace Gun_Eleme {
 
         private void Start() {
             control_Button.Content = "停止";
-            runThread.Start();
+            isRunning = true;
+            new Thread(() => {
+                foreach (ElemeLuckyMoney eleme in elemeHistoryList) {
+                    if (eleme.Rest >= 0) {
+                        runningThread.Start(eleme);
+                        Thread.Sleep(1000);
+                    }
+                }
+            }).Start();
         }
 
         private void Stop() {
             control_Button.Content = "开始";
-            runThread = null;
+            isRunning = false;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e) {
+            //LoginWindow window = new LoginWindow(this, new QqUser());
+            //window.ShowDialog();
             while (!InstallCertificate()) {
-                switch(MessageBox.Show(this, "请信任该证书！", "警告", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No)) {
+                switch (MessageBox.Show(this, "请信任该证书！", "警告", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No)) {
                     case MessageBoxResult.Yes:
                         break;
                     default:
@@ -206,20 +200,18 @@ namespace Gun_Eleme {
         }
 
         private void wechatLogin_Button_Click(object sender, RoutedEventArgs e) {
-            WechatWindow window = new WechatWindow(this, checkUser);
+            LoginWindow window = new LoginWindow(this, checkUser);
             if(window.ShowDialog() == true) {
-                checkUserName_Label.Content = window.LoginToken.UserName;
+                checkUserName_Label.Content = checkUser.UserName;
                 checkUserStatus_Label.Content = "已登录";
-                checkUser.Sync(window.LoginToken, (eleme) => {
-                    if (!elemeHistoryList.Contains(eleme)) {
-                        lock (elemeQueue) {
-                            elemeQueue.Enqueue(eleme);
-                        }
-                        listeningMoneyCount++;
-                        Dispatcher.Invoke(() => {
+                checkUser.Sync((eleme) => {
+                    Dispatcher.Invoke(() => {
+                        if (!elemeHistoryList.Contains(eleme)) {
+                            listeningMoneyCount++;
                             elemeHistoryList.Insert(0, eleme);
-                        });
-                    }
+                            runningThread.Start(eleme);
+                        }
+                    });
                 }, () => {
                     Dispatcher.Invoke(() => {
                         checkUserStatus_Label.Content = "登录失效";

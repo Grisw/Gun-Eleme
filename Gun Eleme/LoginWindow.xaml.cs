@@ -17,13 +17,11 @@ namespace Gun_Eleme {
     /// <summary>
     /// WechatWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class WechatWindow : Window {
+    public partial class LoginWindow : Window {
+        
+        private User user { get; set; }
 
-        public LoginToken LoginToken { get; private set; }
-
-        private WechatUser user { get; set; }
-
-        public WechatWindow(Window owner, WechatUser user) {
+        public LoginWindow(Window owner, User user) {
             InitializeComponent();
 
             Owner = owner;
@@ -31,17 +29,16 @@ namespace Gun_Eleme {
         }
 
         private void updateQrcode() {
-            user.GetQrcode((isSuccess, uuid) => {
+            user.GetQrcode((isSuccess, url) => {
                 Dispatcher.Invoke(() => {
                     if (isSuccess) {
                         qrcode_Image.Stretch = Stretch.Uniform;
-                        qrcode_Image.Source = new BitmapImage(new Uri("https://login.weixin.qq.com/qrcode/" + uuid));
-                        Action<bool, LoginToken> onCheckLoginCompleted = null;
-                        onCheckLoginCompleted = (isSuccess_1, loginToken) => {
+                        qrcode_Image.Source = new BitmapImage(new Uri(url));
+                        Action<bool> onCheckLoginCompleted = null;
+                        onCheckLoginCompleted = (isSuccess_1) => {
                             Dispatcher.Invoke(() => {
                                 if (isSuccess_1) {
                                     DialogResult = true;
-                                    LoginToken = loginToken;
                                     Close();
                                 } else {
                                     MessageBox.Show(this, "登录失败！请重新登录！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -49,7 +46,7 @@ namespace Gun_Eleme {
                                 }
                             });
                         };
-                        user.CheckLogin(uuid, 1, onCheckLoginCompleted);
+                        user.CheckLogin(onCheckLoginCompleted);
                     } else {
                         qrcode_Image.Stretch = Stretch.None;
                         qrcode_Image.Source = Imaging.CreateBitmapSourceFromHBitmap(Properties.Resources.warning.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
@@ -60,6 +57,8 @@ namespace Gun_Eleme {
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e) {
+            Title = user.GetDisplayName();
+
             updateQrcode();
         }
     }

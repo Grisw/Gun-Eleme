@@ -84,14 +84,15 @@
       <DependentUpon>ChooseUserWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ElemeLuckyMoney.cs" />
-    <Compile Include="LoginToken.cs" />
     <Compile Include="OauthToken.cs" />
     <Compile Include="OauthWindow.xaml.cs">
       <DependentUpon>OauthWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="QqUser.cs" />
+    <Compile Include="User.cs" />
     <Compile Include="WechatUser.cs" />
-    <Compile Include="WechatWindow.xaml.cs">
-      <DependentUpon>WechatWindow.xaml</DependentUpon>
+    <Compile Include="LoginWindow.xaml.cs">
+      <DependentUpon>LoginWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="ChooseUserWindow.xaml">
       <SubType>Designer</SubType>
@@ -113,7 +114,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WechatWindow.xaml">
+    <Page Include="LoginWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
